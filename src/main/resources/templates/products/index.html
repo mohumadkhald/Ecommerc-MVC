@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Products</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/styles.css" rel="stylesheet" />
+    <link href="/css/sidebar.css" rel="stylesheet" />
+    <style>
+        .notificationToast {
+            position: fixed;
+            top: 50px;
+            right: 50%;
+            z-index: 1050; /* Ensure it appears above other elements */
+        }
+        .notificationToastHide {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<!-- Include the navbar fragment -->
+<div th:replace="~{navbar}"></div>
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{products/sidebar}" class="col-md-3 col-lg-2"></div>
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+            <div class="row">
+                <h2 class="col-10"></h2>
+                <a th:href="@{/products/addproduct}" class="btn btn-primary col-2 ml-auto m-3">Add Product</a>
+            </div>
+            <div class="row mb-4">
+                <!-- Iterate over each product -->
+                <!-- Product Card -->
+                <div class="col-md-4 mb-4" th:each="product : ${products}">
+                    <div class="card">
+                        <img class="card-img-top" th:src="${product.getImageUrl()}" th:alt="${product.getName()}">
+                        <div class="card-body">
+                            <a th:href="@{/products/{id}(id=${product.id})}">
+                                <h5 class="card-title" th:text="${product.name}">Product Name</h5>
+                            </a>
+                            <p class="card-text">Price: <span class="font-weight-bold" th:text="${product.price}"></span></p>
+                            <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#addToCartModal" data-product-id="${product.id}">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<div th:replace="~{products/model}"></div>
+<div class="toast" id="notificationToast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <strong class="mr-auto">Notification</strong>
+        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="toast-body">
+        Product added to cart successfully!
+    </div>
+</div>
+<!-- Include the footer fragment -->
+<div th:replace="~{footer}"></div>
+<!-- Include jQuery first -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<!-- Then include Popper.js (required by Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<!-- Finally, include Bootstrap's JavaScript -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle click events on .nav-link elements
+        document.querySelectorAll('.nav-link').forEach(function(linkElement) {
+            linkElement.addEventListener('click', function(e) {
+                var targetSelector = linkElement.getAttribute('data-target');
+                var target = document.querySelector(targetSelector);
+
+                if (target) {
+                    var isCollapsed = !target.classList.contains('show');
+                    target.classList.toggle('show', isCollapsed);
+
+                    // Optionally, toggle aria-expanded attribute
+                    linkElement.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+
+                    // Optionally, save state to localStorage
+                    localStorage.setItem(target.id, isCollapsed.toString());
+
+                    // Add/remove active class from sidebar category
+                    var parent = linkElement.parentNode;
+                    while (parent && parent.classList.contains('nav-link')) {
+                        parent.classList.remove('active');
+                        parent = parent.parentNode;
+                    }
+                    linkElement.classList.add('active');
+                }
+            });
+        });
+
+        // Restore state from localStorage
+        document.querySelectorAll('.collapse').forEach(function(collapseElement) {
+            var isOpen = localStorage.getItem(collapseElement.id);
+            if (isOpen === 'true') {
+                collapseElement.classList.add('show');
+            }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle click events on .nav-link elements
+        document.querySelectorAll('.nav-link').forEach(function(linkElement) {
+            linkElement.addEventListener('click', function(e) {
+                var activeElement = document.querySelector('.sidebar .nav-link.active');
+                if (activeElement) {
+                    activeElement.classList.remove('active');
+                }
+                linkElement.classList.add('active');
+            });
+        });
+    });
+
+    function showToast(message) {
+        var toastElement = document.getElementById('notificationToast');
+        var toast = new bootstrap.Toast(toastElement, {
+            delay: 3000
+        });
+        toastElement.classList.add("notificationToast"); // Add class when showing
+        toastElement.querySelector('.toast-body').innerText = message;
+        toast.show();
+
+        toastElement.addEventListener('hidden.bs.toast', function () {
+            toastElement.classList.add("notificationToastHide"); // Remove class when hidden
+        }, { once: true }); // Ensure this event listener is only triggered once
+    }
+
+
+
+    function addToCart() {
+        const productId = document.getElementById('productId').value;
+        const size = document.getElementById('size').value;
+        const color = document.getElementById('color').value;
+        const quantity = parseInt(document.getElementById('quantity').value);
+
+        const data = {
+            productId: productId,
+            size: size,
+            color: color,
+            quantity: quantity
+        };
+
+        // Check if the user is authenticated
+        const isAuthenticated = document.getElementById('isAuthenticated').value;
+
+        if (isAuthenticated === 'true') {
+            // AJAX request to add to the cart in the backend
+            $.ajax({
+                type: 'POST',
+                url: '/cart/add',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    console.log('Product added to cart:', response);
+                    showToast(response);
+
+                    // Reload the page after a short delay to show the toast message
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000); // 2-second delay
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error adding product to cart:', error);
+                    // Handle error scenarios
+                }
+            });
+        } else {
+            // Save cart items in local storage
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            // Check if the item already exists in the cart
+            let itemExists = false;
+            for (let i = 0; i < cart.length; i++) {
+                if (cart[i].productId === productId && cart[i].size === size && cart[i].color === color) {
+                    cart[i].quantity += quantity;
+                    itemExists = true;
+                    break;
+                }
+            }
+
+            // If item does not exist, add it to the cart
+            if (!itemExists) {
+                cart.push(data);
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showToast("Product added to cart");
+
+            // Reload the page after a short delay to show the toast message
+            setTimeout(function() {
+                window.location.reload();
+            }, 2000); // 2-second delay
+        }
+
+        // Close the modal after adding to cart (if needed)
+        $('#addToCartModal').modal('hide');
+    }
+
+    // When the "Add to Cart" button is clicked, set the product ID in the hidden input field
+    document.querySelectorAll('button[data-toggle="modal"]').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            const productId = event.target.closest('.card').querySelector('a').getAttribute('href').split('/').pop();
+            document.getElementById('productId').value = productId;
+            var productName = $(this).closest('.card-body').find('.card-title').text();
+            $('#addToCartModalLabel').text(productName);
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const isAuthenticated = document.getElementById('isAuthenticated').value;
+
+        if (isAuthenticated === 'false') {
+            const cart = localStorage.getItem('cart');
+            if (cart) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/cart/localstorage', true);
+                xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                xhr.setRequestHeader('Local-Cart', cart);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        console.log('Local cart sent to server');
+                    }
+                };
+                xhr.send();
+            }
+        }
+    });
+
+</script>
+</body>
+</html>

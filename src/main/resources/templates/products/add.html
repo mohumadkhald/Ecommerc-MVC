@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Products</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/styles.css" rel="stylesheet" />
+</head>
+<body>
+<!-- Include the navbar fragment -->
+<div th:replace="~{navbar}"></div>
+
+<div class="container mt-3">
+    <form th:action="@{/products/addProduct}" th:object="${newProduct}" method="post" class="needs-validation" novalidate>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="name">Name:</label>
+                <input type="text" th:field="*{name}" class="form-control" id="name" required />
+                <div class="invalid-feedback">Please enter a product name.</div>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="description">Description:</label>
+                <input type="text" th:field="*{description}" class="form-control" id="description" required />
+                <div class="invalid-feedback">Please enter a description.</div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="price">Price:</label>
+                <input type="number" th:field="*{price}" class="form-control" id="price" required />
+                <div class="invalid-feedback">Please enter a price.</div>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="category">Category:</label>
+                <select th:field="*{category.id}" class="form-control" id="category" required>
+                    <option th:each="category : ${lastChildrenCategories}" th:value="${category.id}" th:text="${category.name}"></option>
+                </select>
+                <div class="invalid-feedback">Please select a category.</div>
+            </div>
+        </div>
+
+        <!-- Variation fields (initial fields) -->
+        <div class="variation-fields">
+            <div class="form-row variation-row">
+                <div class="form-group col-md-4">
+                    <label for="variationColor">Color:</label>
+                    <select id="variationColor" th:field="*{variations[0].color}" class="form-control variation-color">
+                        <option value="red">Red</option>
+                        <option value="blue">Blue</option>
+                        <!-- Add other colors as needed -->
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="variationSize">Size:</label>
+                    <select id="variationSize" th:field="*{variations[0].size}" class="form-control variation-size">
+                        <option value="S">Small</option>
+                        <option value="M">Medium</option>
+                        <!-- Add other sizes as needed -->
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="variationQuantity">Quantity:</label>
+                    <input id="variationQuantity" type="number" th:field="*{variations[0].quantity}" class="form-control variation-quantity" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Button to add more variations -->
+        <div class="form-group">
+            <button type="button" class="btn btn-secondary" id="addVariationBtn">Add Variation</button>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Add Product</button>
+        </div>
+    </form>
+    <ul class="list-group">
+        <li class="list-group-item" th:each="category : ${lastChildrenCategories}">
+            <span th:text="${category.name}">Category Name</span>
+            <ul>
+                <li class="list-group-item" th:each="product : ${category.products}">
+                    <span th:text="${product.name}">Product Name</span> -
+                    <span th:text="${product.description}">Product Description</span> -
+                    <span th:text="${product.price}">Product Price</span>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<!-- Include the footer fragment -->
+<div th:replace="~{footer}"></div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    // Bootstrap validation
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        var addVariationBtn = document.getElementById('addVariationBtn');
+        var variationFields = document.querySelector('.variation-fields');
+
+        addVariationBtn.addEventListener('click', function () {
+            var nextIndex = document.querySelectorAll('.variation-row').length;
+
+            var newVariationRow = document.createElement('div');
+            newVariationRow.classList.add('form-row', 'variation-row');
+
+            newVariationRow.innerHTML = `
+                <div class="form-group col-md-4">
+                    <label for="variationColor">Color:</label>
+                    <select name="variations[${nextIndex}].color" class="form-control variation-color" required>
+                        <option value="red">Red</option>
+                        <option value="blue">Blue</option>
+                        <!-- Add other colors as needed -->
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="variationSize">Size:</label>
+                    <select name="variations[${nextIndex}].size" class="form-control variation-size" required>
+                        <option value="S">Small</option>
+                        <option value="M">Medium</option>
+                        <!-- Add other sizes as needed -->
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="variationQuantity">Quantity:</label>
+                    <input type="number" name="variations[${nextIndex}].quantity" class="form-control variation-quantity" required />
+                </div>
+                <div class="form-group col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger delete-variation-btn">Delete</button>
+                </div>
+            `;
+
+            variationFields.appendChild(newVariationRow);
+
+            // Add event listener for delete button
+            newVariationRow.querySelector('.delete-variation-btn').addEventListener('click', function () {
+                newVariationRow.remove();
+            });
+        });
+    });
+</script>
+</body>
+</html>

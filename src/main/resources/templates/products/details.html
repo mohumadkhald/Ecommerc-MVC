@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .thumbnail {
+            max-width: 100px;
+            cursor: pointer;
+        }
+        .main-image-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+        }
+        .main-image {
+            width: 100%;
+            max-height: 500px;
+        }
+        .magnifier {
+            position: absolute;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: none;
+            /* size of magnifier glass */
+            width: 100px;
+            height: 100px;
+            /* initially hidden */
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{navbar}"></div>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="main-image-container" id="mainImageContainer">
+                <img id="mainImage" th:src="@{${product.imageUrl}}" class="img-fluid main-image" th:alt="${product.name}">
+                <div id="magnifier" class="magnifier"></div>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <img th:src="@{/images/image1.jpg}" class="img-fluid thumbnail" onclick="changeMainImage(this.src)" alt="Thumbnail 1">
+                    <img th:src="@{/images/image2.jpg}" class="img-fluid thumbnail" onclick="changeMainImage(this.src)" alt="Thumbnail 2">
+                    <img th:src="@{/images/image3.jpg}" class="img-fluid thumbnail" onclick="changeMainImage(this.src)" alt="Thumbnail 3">
+                    <img th:src="@{/images/image4.jpg}" class="img-fluid thumbnail" onclick="changeMainImage(this.src)" alt="Thumbnail 4">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h1 th:text="${product.name}">Product Name</h1>
+            <p th:text="${product.description}">Product Description</p>
+            <h4>Price: $<span th:text="${product.price}">0.00</span></h4>
+            <p>Available Quantity: <span th:text="${product.allQuantity}">0</span></p>
+            <h5>Variations:</h5>
+            <ul>
+                <li th:each="variation : ${product.variations}">
+                    Color: <span th:text="${variation.color}">Color</span>,
+                    Size: <span th:text="${variation.size}">Size</span>,
+                    Quantity: <span th:text="${variation.quantity}">0</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <a th:href="@{/products/allproducts}" class="btn btn-primary">Back to Products</a>
+        </div>
+    </div>
+    <!-- Add to Cart button -->
+    <button type="button" class="btn btn-success mt-3" data-toggle="modal" data-target="#addToCartModal" th:data-product-id="${product.id}">
+        Add to Cart
+    </button>
+</div>
+<!-- Modal -->
+<div th:replace="~{products/model}"></div>
+
+<div th:replace="~{footer}"></div>
+<!-- Ensure jQuery is included first -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Then include Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    function changeMainImage(src) {
+        document.getElementById('mainImage').src = src;
+    }
+
+    const mainImageContainer = document.getElementById('mainImageContainer');
+    const mainImage = document.getElementById('mainImage');
+    const magnifier = document.getElementById('magnifier');
+
+    mainImageContainer.addEventListener('mousemove', function(e) {
+        const containerRect = mainImageContainer.getBoundingClientRect();
+        const magnifierSize = magnifier.offsetWidth / 2;
+
+        let x = e.clientX - containerRect.left;
+        let y = e.clientY - containerRect.top;
+
+        x = Math.max(magnifierSize, Math.min(x, containerRect.width - magnifierSize));
+        y = Math.max(magnifierSize, Math.min(y, containerRect.height - magnifierSize));
+
+        magnifier.style.left = x - magnifierSize + 'px';
+        magnifier.style.top = y - magnifierSize + 'px';
+        magnifier.style.backgroundImage = `url(${mainImage.src})`;
+        magnifier.style.backgroundRepeat = 'no-repeat';
+        magnifier.style.backgroundSize = mainImage.width * 2 + 'px ' + mainImage.height * 2 + 'px';
+        magnifier.style.backgroundPosition = `-${(x - magnifierSize) * 2}px -${(y - magnifierSize) * 2}px`;
+        magnifier.style.display = 'block';
+    });
+
+    mainImageContainer.addEventListener('mouseleave', function() {
+        magnifier.style.display = 'none';
+    });
+
+
+    function addToCart() {
+        const productId = document.getElementById('productId').value;
+        const size = document.getElementById('size').value;
+        const color = document.getElementById('color').value;
+        const quantity = document.getElementById('quantity').value;
+
+        const data = {
+            productId: productId,
+            size: size,
+            color: color,
+            quantity: quantity
+        };
+
+        // AJAX request using jQuery
+        $.ajax({
+            type: 'POST',
+            url: '/cart/add', // Replace with your backend endpoint for adding to cart
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                console.log('Product added to cart:', response);
+                // Optionally update UI or show a success message
+            },
+            error: function(xhr, status, error) {
+                console.error('Error adding product to cart:', error);
+                // Handle error scenarios
+            }
+        });
+
+        // Close the modal after adding to cart (if needed)
+        $('#addToCartModal').modal('hide');
+    }
+
+    // When the "Add to Cart" button is clicked, set the product ID in the hidden input field
+    document.querySelectorAll('button[data-toggle="modal"]').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            const productId = event.target.getAttribute('data-product-id');
+            document.getElementById('productId').value = productId;
+        });
+    });
+
+</script>
+</body>
+</html>

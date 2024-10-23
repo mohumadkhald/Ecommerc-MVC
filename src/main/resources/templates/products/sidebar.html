@@ -1,0 +1,29 @@
+<!-- Sidebar -->
+<nav id="sidebar" class="col-md-3 mt-2 col-lg-2 d-md-block bg-light sidebar">
+    <div class="sidebar-sticky">
+        <ul class="nav mt-2 flex-column">
+            <!-- Iterate over top categories -->
+            <li class="nav-item" th:each="category : ${topCategories}">
+                <a class="nav-link" href="#" th:data-target="'#category-' + ${category.id}">
+                    <span th:text="${category.name}">Category Name</span>
+                </a>
+
+                <!-- Recursive call to display children -->
+                <ul class="collapse" th:id="'category-' + ${category.id}" data-parent="#sidebar">
+                    <li class="nav-item" th:each="child : ${category.children}">
+                        <a class="nav-link" href="#" th:data-target="'#child-category-' + ${child.id}" aria-expanded="false" aria-controls="'child-category-' + ${child.id}">
+                            <span th:text="${child.name}">Child Category</span>
+                        </a>
+                        <ul class="collapse" th:id="'child-category-' + ${child.id}" data-parent="#category-${category.id}">
+                            <!-- Iterate over sub children -->
+                            <li class="nav-item" th:each="subChild : ${child.children}">
+                                <a class="text-dark nav-link ml-3" th:href="@{/products/category/{id}(id=${subChild.id})}"
+                                   th:class="${id == subChild.id ? 'text-red' : ''}" th:text="${subChild.name}">Sub Child Category</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>

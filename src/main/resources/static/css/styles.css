@@ -1,0 +1,42 @@
+.navbar-custom {
+    background-color: #343a40;
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .navbar-nav .nav-link {
+    color: white;
+}
+.navbar-nav li a {
+    color: #333; /* default color */
+}
+
+.navbar-nav li a:hover {
+    color: #666; /* hover color */
+}
+
+.navbar-nav li a.active {
+    color: #00698f; /* active color */
+    background-color: #e7f3f8; /* active background color */
+}
+
+.container-dashboard {
+    max-width: 800px;
+    margin: auto;
+    margin-top: 20px;
+}
+.list-group-item {
+    background-color: #f8f9fa;
+    margin-top: 10px;
+}
+footer {
+    background-color: #343a40;
+    color: white;
+    text-align: center;
+    padding: 5px 0;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    z-index: 1000; /* Ensure the footer is above other content */
+}

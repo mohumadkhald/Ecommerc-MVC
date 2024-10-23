@@ -1,0 +1,314 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cart</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+          integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+          crossorigin="anonymous">
+    <style>
+        .cart-container {
+            margin-top: 50px;
+        }
+        .cart-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .empty-cart {
+            text-align: center;
+            padding: 50px 0;
+            font-size: 1.5em;
+            color: #777;
+        }
+        .empty-cart img {
+            max-width: 100px;
+            margin-bottom: 20px;
+        }
+
+        .login-req {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .login-req img {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+        .login-req h2 {
+            margin-bottom: 20px;
+        }
+        .login-req a {
+            text-decoration: none;
+        }
+        .login-req .btnLog {
+            margin: 5px;
+            padding: 10px 20px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .login-req .btnLog a {
+            color: white;
+        }
+        .login-req .btnLog-secondary {
+            background-color: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar inclusion using Thymeleaf -->
+<div th:replace="~{navbar}"></div>
+
+<div class="container cart-container">
+    <div class="row">
+        <div class="col">
+            <h1 class="cart-header">Your Cart</h1>
+            <div th:if="${message}">
+                <p th:text="${message}"></p>
+            </div>
+            <table class="table" th:if="${cartItems != null and cartItems.size() > 0}">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Product Name</th>
+                    <th scope="col">Product Color</th>
+                    <th scope="col">Product Size</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Iterate over cart items -->
+                <tr th:each="cartItem, itemStat : ${cartItems}">
+                    <td th:text="${itemStat.index + 1}">1</td>
+                    <td th:text="${cartItem.productVariation?.product?.name}">Product Name</td>
+                    <td th:text="${cartItem.productVariation?.color}">Color</td>
+                    <td th:text="${cartItem.productVariation?.size}">Size</td>
+                    <td th:text="${cartItem.productVariation?.product?.price != null ? cartItem.productVariation.product.price : '0.00'}">0.00</td>
+                    <td>
+                        <form th:action="@{/cart/update-quantity}" method="post" class="d-inline">
+                            <input type="number" class="cart-item-quantity form-control" id="quantity" name="quantity" th:value="${cartItem.quantity != null ? cartItem.quantity : '0'}">
+                            <input type="hidden" name="productId" th:value="${cartItem.productVariation.product.id}" id="productId">
+                            <input type="hidden" name="cartItemId" th:value="${cartItem.id}">
+                            <input type="hidden" name="newQuantity" value="0">
+                            <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="updateQuantity(this)">Update</button>
+                        </form>
+                    </td>
+                    <td th:text="${cartItem.productVariation?.product?.price != null && cartItem.quantity != null ? #numbers.formatDecimal(cartItem.productVariation.product.price * cartItem.quantity, 1, 2) : '0.00'}">0.00</td>
+                    <td>
+                        <form th:action="@{/cart/delete/{id}(id=${cartItem.id})}" method="post">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            <input type="hidden" th:value="${cartItem.productVariation.product.id}" id="productIdToDelete">
+                            <input type="hidden" th:value="${cartItem.productVariation.color}" id="colorToDelete">
+                            <input type="hidden" th:value="${cartItem.productVariation.size}" id="sizeToDelete">
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${cartItems != null and cartItems.size() > 0}">
+                <div class="total-price">
+                    <h3>Total Price: <span th:text="${totalPrice}">0.00</span></h3>
+                </div>
+                <div class="checkout">
+                    <form th:action="@{/checkout}" method="get">
+                        <button type="submit" class="btn btn-primary">Checkout</button>
+                    </form>
+                </div>
+            </div>
+            <div th:if="${cartItems == null or cartItems.size() == 0}">
+                <div th:if="${cartItems == null or cartItems.size() == 0}">
+                    <div class="empty-cart">
+                        <img src="https://m.media-amazon.com/images/G/01/cart/empty/kettle-desaturated._CB445243794_.svg" alt="Nice Day">
+                        <h2>Your Cart is Empty</h2>
+                        <p><a th:href="@{/products/allproducts}" class="btn btn-secondary">Products Today</a></p>
+                        <button class="btnLog btnLog-secondary"><a th:href="@{/login}">Sign in To Your Account</a></button>
+                        <button class="btnLog btnLog-secondary"><a th:href="@{/register}">Sign Up Now</a></button>
+                    </div>
+                    <div class="loginRe">
+                        <p>
+                            The price and availability of items at MyShopping.com are subject to change.
+                            The Cart is a temporary place to store a list of your items and reflects each item's most recent price.
+                            Do you have a gift card or promotional code? We'll ask you to enter your claim code when it's time to pay.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Footer inclusion using Thymeleaf -->
+<div th:replace="~{footer}"></div>
+
+<input type="hidden" id="isAuthenticated" th:value="${userName != null ? 'true' : 'false'}">
+
+<!-- Bootstrap JS and any other scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"
+        integrity="sha384-nQP4f+wJ8Gi9qRp2IlA50v9FHLs0L3NC+oDjZtdq7OHkA/Ph2NVw5OatblRO+Kw/"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8sh+2gsxgDwRtA1MQwHA+8E5THgYFqy4ks4MWpi"
+        crossorigin="anonymous"></script>
+
+<!-- Check if local cart data was sent and trigger reload once -->
+<script th:inline="javascript">
+    function updateQuantity(button) {
+        const form = button.closest('form');
+        const quantityInput = form.querySelector('.cart-item-quantity'); // Find quantity input relative to the form
+
+        // Check if quantityInput is found and is not null
+        if (!quantityInput) {
+            console.error('Quantity input not found or null.');
+            return;
+        }
+
+        const newQuantity = parseInt(quantityInput.value.trim());
+
+        // Ensure quantity doesn't go below 1
+        if (newQuantity < 1) {
+            alert('Quantity must be at least 1');
+            return;
+        }
+
+        // Update the input field value in the DOM
+        quantityInput.value = newQuantity;
+
+        // Update hidden input value with new quantity
+        form.querySelector('input[name="newQuantity"]').value = newQuantity;
+
+        // Update local storage if user is not authenticated
+        const isAuthenticated = document.getElementById('isAuthenticated').value;
+        if (isAuthenticated === 'false') {
+            const cart = JSON.parse(localStorage.getItem('cart'));
+            const productId = form.querySelector('input[name="productId"]').value;
+
+            if (cart) {
+                // Update quantity in local storage
+                const updatedCart = cart.map(item => {
+                    if (item.productId === productId) {
+                        item.quantity = newQuantity;
+                    }
+                    return item;
+                });
+
+                localStorage.setItem('cart', JSON.stringify(updatedCart));
+                window.location.reload();
+                console.log('Quantity updated locally');
+            }
+        }
+
+        // Send update to server if authenticated
+        if (isAuthenticated === 'true') {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log('Quantity updated successfully');
+                        // Optionally handle success response here
+                        window.location.reload();
+                    } else {
+                        console.error('Error updating quantity:', xhr.statusText);
+                        // Optionally handle error response here
+                    }
+                }
+            };
+
+            // Create JSON object to send
+            const requestData = {
+                cartItemId: form.querySelector('input[name="cartItemId"]').value,
+                newQuantity: newQuantity
+            };
+
+            // Convert JSON object to string
+            const jsonData = JSON.stringify(requestData);
+
+            xhr.send(jsonData);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const isAuthenticated = document.getElementById('isAuthenticated').value;
+
+        if (isAuthenticated === 'false') {
+            const cart = localStorage.getItem('cart');
+            if (cart) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/cart/localstorage', true);
+                xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            console.log('Local cart sent to server');
+                            // Set a flag in localStorage to indicate that cart was sent
+                            localStorage.setItem('cartSentToServer', 'true');
+                        } else {
+                            console.error('Error sending local cart:', xhr.statusText);
+                            // Handle error scenario here if needed
+                        }
+                    }
+                };
+                xhr.send(cart);
+            }
+        }
+
+        const cartSentToServer = localStorage.getItem('cartSentToServer');
+        if (cartSentToServer === 'true') {
+            // Clear the flag to prevent further reloads
+            localStorage.removeItem('cartSentToServer');
+            // Reload the page after a short delay to ensure server-side processing completes
+            setTimeout(function () {
+                localStorage.setItem('cartSentToServer', 'false');
+                window.location.reload();
+            }, 100); // Adjust the delay as needed
+        }
+
+        const deleteForms = document.querySelectorAll('form[action^="/cart/delete/"]');
+
+        deleteForms.forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const productIdToDelete = form.querySelector('#productIdToDelete').value;
+                const colorToDelete = form.querySelector('#colorToDelete').value;
+                const sizeToDelete = form.querySelector('#sizeToDelete').value;
+
+                deleteCartItemFromLocalStorage(productIdToDelete, colorToDelete, sizeToDelete);
+
+                // Submit the form normally after deleting from localStorage
+                form.submit();
+            });
+        });
+
+        function deleteCartItemFromLocalStorage(productId, color, size) {
+            const cart = JSON.parse(localStorage.getItem('cart'));
+            if (cart) {
+                const updatedCart = cart.filter(item => {
+                    // Check if productId, color, and size match for deletion
+                    return !(item.productId === productId && item.color === color && item.size === size);
+                });
+                localStorage.setItem('cart', JSON.stringify(updatedCart));
+                console.log(`Deleted item: Product ID ${productId}, Color ${color}, Size ${size} from localStorage`);
+            }
+        }
+    });
+</script>
+<script>
+    window.onload = function() {
+        fetch('/cart/user/isLoggedIn')
+            .then(response => response.json())
+            .then(isLoggedIn => {
+                if (isLoggedIn) {
+                    // Clear the cart items from local storage
+                    localStorage.removeItem('cart');
+                }
+            });
+    };
+</script>
+</body>
+</html>

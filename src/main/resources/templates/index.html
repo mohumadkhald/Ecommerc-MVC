@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - E-commerce</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet" />
+    <style>
+        .jumbotron {
+            background-color: #f8f9fa;
+            padding: 2rem 1rem;
+        }
+
+        .jumbotron h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .jumbotron p {
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .feature-box {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .feature-box i {
+            font-size: 4rem;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+
+        .carousel-item img {
+            max-height: 300px; /* Adjust height of the carousel image */
+            object-fit: cover;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- Include the navbar fragment -->
+<div th:replace="~{navbar}"></div>
+<div class="jumbotron">
+    <div class="container">
+        <h1>Welcome to Our E-commerce Store</h1>
+        <p>Explore our wide range of products and find what you need today.</p>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Featured Products</h2>
+    <div id="productCarousel" class="carousel slide" data-ride="carousel">
+        <ol class="carousel-indicators">
+            <li data-target="#productCarousel" data-slide-to="0" class="active"></li>
+            <li data-target="#productCarousel" data-slide-to="1"></li>
+            <li data-target="#productCarousel" data-slide-to="2"></li>
+            <!-- Add more indicators if you have more products -->
+        </ol>
+        <div class="carousel-inner">
+            <!-- Loop through products to display them in the carousel -->
+            <div th:each="product, iterStat : ${products}" class="carousel-item" th:classappend="${iterStat.index == 0} ? 'active' : ''">
+                <img th:src="${product.imageUrl}" class="d-block w-100" alt="Product Image">
+                <div class="carousel-caption d-none d-md-block">
+                    <h5 th:text="${product.name}"></h5>
+                    <p th:text="${product.description}"></p>
+                    <p><a class="btn btn-primary" th:href="@{/product/details/{id}(id=${product.id})}">View Details</a></p>
+                </div>
+            </div>
+        </div>
+        <a class="carousel-control-prev" href="#productCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#productCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="feature-box">
+                <i class="fa fa-shopping-cart"></i>
+                <h3>Shop Online</h3>
+                <p>Conveniently browse and purchase from our extensive collection.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-box">
+                <i class="fa fa-truck"></i>
+                <h3>Fast Delivery</h3>
+                <p>Get your products delivered swiftly to your doorstep.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-box">
+                <i class="fa fa-lock"></i>
+                <h3>Secure Transactions</h3>
+                <p>Rest assured with our secure payment methods.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Include the footer fragment -->
+<div th:replace="~{footer}"></div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Category Management</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .container-category {
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .tree {
+            margin-top: 20px;
+        }
+
+        .tree ul {
+            list-style: none;
+            padding-left: 25px;
+        }
+
+        .tree li {
+            margin-bottom: 15px;
+            margin: 10px;
+            position: relative;
+        }
+
+        .tree li:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -15px;
+            border-left: 1px solid #ccc;
+            height: 100%;
+        }
+
+        .tree li > span {
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+
+        .tree li > ul {
+            margin-left: 15px;
+        }
+
+        .btn-delete {
+            margin-left: 15px;
+        }
+
+        @media (max-width: 400px) {
+            .container-category {
+                padding: 10px;
+            }
+        }
+    </style>
+    <link href="/css/styles.css" rel="stylesheet" />
+</head>
+<body>
+<!-- Include the navbar fragment -->
+<div th:replace="~{navbar}"></div>
+<div class="container-category">
+    <h2 class="text-center">Category Management</h2>
+    <!-- Form to add new category -->
+    <form th:action="@{/category}" th:object="${category}" method="post">
+        <div class="form-group">
+            <label for="categoryName">Category Name:</label>
+            <input type="text" class="form-control" id="categoryName" th:field="*{name}" required />
+        </div>
+        <div class="form-group">
+            <label for="parentCategory">Parent Category:</label>
+            <select class="form-control" id="parentCategory" th:field="*{parent.id}">
+                <option value="">None</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">
+                </option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Category</button>
+    </form>
+
+    <!-- Display categories in a tree structure -->
+    <ul class="tree">
+        <li th:each="category : ${topLevelCategories}">
+            <span th:text="${category.name}">Category Name</span>
+            <!-- Delete button for each category -->
+            <button class="btn btn-danger btn-sm btn-delete" th:onclick="'deleteCategory(\'' + ${category.id} + '\')'">X</button>
+            <ul th:if="${category.children.size() > 0}">
+                <li th:each="childCategory : ${category.children}">
+                    <span th:text="${childCategory.name}">Category Name</span>
+                    <!-- Delete button for each child category -->
+                    <button class="btn btn-danger btn-sm btn-delete" th:onclick="'deleteCategory(\'' + ${childCategory.id} + '\')'">X</button>
+                    <ul th:if="${childCategory.children.size() > 0}">
+                        <li th:each="subChildCategory : ${childCategory.children}">
+                            <span th:text="${subChildCategory.name}">Category Name</span>
+                            <!-- Delete button for each sub-child category -->
+                            <button class="btn btn-danger btn-sm btn-delete" th:onclick="'deleteCategory(\'' + ${subChildCategory.id} + '\')'">X</button>
+                            <!-- Add more levels as needed -->
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+</div>
+
+<!-- Include the footer fragment -->
+<div th:replace="~{footer}"></div>
+
+<!-- Include jQuery first -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<!-- Then include Popper.js (required by Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+
+<!-- Finally, include Bootstrap's JavaScript -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- Your custom JavaScript for category deletion -->
+<script th:inline="javascript">
+    function deleteCategory(categoryId) {
+        if (confirm('Are you sure you want to delete this category?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/deleteCategory/' + categoryId,
+                success: function(response) {
+                    console.log('Category deleted successfully');
+                    location.reload();  // Refresh the page to reflect changes
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error deleting category:', error);
+                }
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
